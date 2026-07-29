@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity 07: Memory Forensics Analysis - CNM Cybersecurity</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --navy: #0F1419;
+            --cyan: #00D9FF;
+            --red: #DC3545;
+            --gray-light: #F0F2F5;
+            --gray-dark: #2D3139;
+            --black: #000000;
+            --white: #FFFFFF;
+            --success: #28A745;
+            --warning: #FFC107;
+            --border-radius: 8px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: var(--gray-light);
+            overflow-x: hidden;
+        }
+
+        /* ============ HEADER & NAV ============ */
+        header {
+            background: linear-gradient(135deg, var(--navy) 0%, #1a2333 100%);
+            color: var(--white);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 217, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo span {
+            color: var(--cyan);
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        nav a {
+            color: var(--white);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--cyan);
+            transition: width 0.3s ease;
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        .breadcrumb {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-left: auto;
+        }
+
+        /* ============ HERO SECTION ============ */
+        .hero {
+            background: linear-gradient(135deg, var(--navy) 0%, #1a2333 50%, #0d1117 100%);
+            color: var(--white);
+            padding: 4rem 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: -500px;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(220, 53, 69, 0.15) 0%, transparent 70%);
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(30px); }
+        }
+
+        .hero-content {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .activity-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: rgba(220, 53, 69, 0.2);
+            border: 1px solid var(--red);
+            border-radius: 20px;
+            color: var(--red);
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .hero h1 {
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            line-height: 1.2;
+        }
+
+        .hero h1 .highlight {
+            color: var(--red);
+            text-shadow: 0 0 20px rgba(220, 53, 69, 0.5);
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            max-width: 700px;
+        }
+
+        .activity-meta {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .meta-label {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .meta-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        /* ============ MAIN CONTENT ============ */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .content-wrapper {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 3rem;
+            margin: -2rem 2rem 3rem;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 2;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section h2 {
+            font-size: 1.8rem;
+            color: var(--navy);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid var(--red);
+            display: inline-block;
+        }
+
+        .section h3 {
+            font-size: 1.3rem;
+            color: var(--navy);
+            margin-top: 1.5rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .section p {
+            margin-bottom: 1rem;
+            line-height: 1.8;
+            color: #555;
+        }
+
+        .section ul, .section ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .section li {
+            margin-bottom: 0.8rem;
+            line-height: 1.7;
+            color: #555;
+        }
+
+        /* ============ INFO BOXES ============ */
+        .info-box {
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            margin: 1.5rem 0;
+            border-left: 4px solid;
+        }
+
+        .info-box.objective {
+            background: rgba(0, 217, 255, 0.08);
+            border-color: var(--cyan);
+        }
+
+        .info-box.objective h4 {
+            color: #0066cc;
+            margin-bottom: 0.8rem;
+        }
+
+        .info-box.warning {
+            background: rgba(220, 53, 69, 0.08);
+            border-color: var(--red);
+        }
+
+        .info-box.warning h4 {
+            color: var(--red);
+            margin-bottom: 0.8rem;
+        }
+
+        .info-box.tip {
+            background: rgba(40, 167, 69, 0.08);
+            border-color: var(--success);
+        }
+
+        .info-box.tip h4 {
+            color: var(--success);
+            margin-bottom: 0.8rem;
+        }
+
+        .info-box h4 {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .info-box p {
+            margin-bottom: 0.5rem;
+        }
+
+        .info-box p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* ============ ANALYSIS PHASES ============ */
+        .phase-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .phase-card {
+            background: linear-gradient(135deg, var(--navy), var(--gray-dark));
+            color: var(--white);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            border: 2px solid var(--red);
+            position: relative;
+        }
+
+        .phase-number {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--red);
+            margin-bottom: 0.5rem;
+        }
+
+        .phase-card h4 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .phase-card p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin-bottom: 0;
+        }
+
+        /* ============ ARTIFACT TABLE ============ */
+        .artifact-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+        }
+
+        .artifact-table th {
+            background: var(--navy);
+            color: var(--white);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .artifact-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .artifact-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .artifact-table tr:nth-child(even) {
+            background: rgba(220, 53, 69, 0.03);
+        }
+
+        .artifact-badge {
+            display: inline-block;
+            padding: 0.3rem 0.6rem;
+            background: rgba(220, 53, 69, 0.2);
+            color: var(--red);
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* ============ TOOL CARDS ============ */
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .tool-card {
+            background: var(--white);
+            border: 2px solid #eee;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+
+        .tool-card:hover {
+            border-color: var(--red);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.15);
+        }
+
+        .tool-icon {
+            font-size: 2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .tool-card h4 {
+            color: var(--navy);
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .tool-card p {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0;
+        }
+
+        /* ============ CODE BLOCKS ============ */
+        .code-block {
+            background: var(--navy);
+            color: var(--cyan);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            border: 1px solid var(--gray-dark);
+        }
+
+        .code-block .comment {
+            color: #6A9955;
+        }
+
+        .code-block .keyword {
+            color: var(--cyan);
+        }
+
+        .code-block .output {
+            color: #CE9178;
+        }
+
+        /* ============ CHECKLIST ============ */
+        .checklist {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            border: 1px solid #eee;
+            margin: 1.5rem 0;
+        }
+
+        .checklist h4 {
+            color: var(--navy);
+            margin-bottom: 1rem;
+        }
+
+        .checklist-item {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0.8rem;
+            align-items: flex-start;
+        }
+
+        .checklist-item input[type="checkbox"] {
+            margin-top: 4px;
+            cursor: pointer;
+            accent-color: var(--red);
+            width: 18px;
+            height: 18px;
+        }
+
+        .checklist-item label {
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .checklist-item input[type="checkbox"]:checked + label {
+            text-decoration: line-through;
+            color: #999;
+        }
+
+        /* ============ NAVIGATION ============ */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 2px solid #eee;
+            gap: 1rem;
+        }
+
+        .nav-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 10px 20px;
+            text-decoration: none;
+            background: var(--navy);
+            color: var(--white);
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+
+        .nav-button:hover {
+            background: var(--red);
+            color: var(--white);
+        }
+
+        .nav-spacer {
+            flex: 1;
+        }
+
+        /* ============ PROGRESS BAR ============ */
+        .progress-container {
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--red), var(--warning));
+            width: 70%;
+            border-radius: 10px;
+        }
+
+        .progress-text {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        /* ============ FOOTER ============ */
+        footer {
+            background: var(--navy);
+            color: var(--white);
+            padding: 2rem;
+            text-align: center;
+            margin-top: 3rem;
+            border-top: 3px solid var(--red);
+        }
+
+        footer p {
+            opacity: 0.8;
+            margin-bottom: 0.5rem;
+        }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .content-wrapper {
+                padding: 2rem;
+                margin: -1.5rem 1rem 2rem;
+            }
+
+            nav ul {
+                gap: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .breadcrumb {
+                width: 100%;
+                margin-left: 0;
+                order: 3;
+            }
+
+            nav {
+                flex-wrap: wrap;
+            }
+
+            .activity-meta {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .phase-cards,
+            .tool-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .navigation {
+                flex-direction: column;
+            }
+
+            .artifact-table {
+                font-size: 0.85rem;
+            }
+
+            .artifact-table th,
+            .artifact-table td {
+                padding: 0.6rem;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header>
+        <nav>
+            <div class="logo">
+                🛡️ <span>CNM Cyber</span>Security
+            </div>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="index.html#courses">Courses</a></li>
+                <li><a href="index.html#activities">Activities</a></li>
+                <li><span class="breadcrumb">Activity 07: Memory Forensics</span></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+        <div class="hero-content">
+            <span class="activity-badge">🚨 ADVANCED LEVEL</span>
+            <h1>Activity 07: <span class="highlight">Memory Forensics Analysis</span></h1>
+            <p>Extract and analyze volatile memory (RAM) from running systems. Uncover hidden malware, recover deleted data, and reconstruct system activity from memory dumps.</p>
+            
+            <div class="activity-meta">
+                <div class="meta-item">
+                    <span class="meta-label">Difficulty</span>
+                    <span class="meta-value">Advanced</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Duration</span>
+                    <span class="meta-value">5-6 hours</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Tools Required</span>
+                    <span class="meta-value">Volatility, WinDbg, DumpIt</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+        <div class="content-wrapper">
+            <!-- LEARNING OBJECTIVES -->
+            <section class="section">
+                <h2>Learning Objectives</h2>
+                <div class="info-box objective">
+                    <h4>📚 What You'll Learn</h4>
+                    <ul style="margin-left: 1rem; margin-bottom: 0;">
+                        <li>Understand volatile memory structure and importance in forensics</li>
+                        <li>Capture memory dumps from running systems safely</li>
+                        <li>Analyze memory dumps using Volatility framework</li>
+                        <li>Identify running processes and hidden processes</li>
+                        <li>Extract network connections, open files, and registry hives</li>
+                        <li>Detect rootkits and kernel-level malware</li>
+                        <li>Recover deleted data from memory</li>
+                        <li>Reconstruct user activity and timeline analysis</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- INTRODUCTION -->
+            <section class="section">
+                <h2>Introduction</h2>
+                <p><strong>Volatile memory</strong> (RAM) is temporary storage that holds active processes, network connections, encryption keys, and sensitive data. Unlike disk storage, RAM is erased when power is lost, making it critical to capture during incident response.</p>
+                
+                <p>Memory forensics provides unique insights:</p>
+                <ul>
+                    <li><strong>Live Process Analysis:</strong> See what's actually running in memory</li>
+                    <li><strong>Rootkit Detection:</strong> Identify kernel-level malware invisible to file system analysis</li>
+                    <li><strong>Encryption Keys:</strong> Recover keys still resident in memory</li>
+                    <li><strong>Hidden Artifacts:</strong> Find evidence deleted from disk but still in RAM</li>
+                    <li><strong>Timeline Reconstruction:</strong> Piece together user activity and attack sequence</li>
+                </ul>
+
+                <div class="info-box warning">
+                    <h4>⚠️ Important Note</h4>
+                    <p>Memory capture can be resource-intensive and may impact system stability. Always perform on non-critical systems or with proper coordination during incident response. Live memory analysis should be performed with extreme caution.</p>
+                </div>
+            </section>
+
+            <!-- MEMORY ARCHITECTURE -->
+            <section class="section">
+                <h2>Memory Architecture and Volatility</h2>
+
+                <h3>Memory Structure Overview</h3>
+                <p>Windows memory is organized hierarchically with kernel structures at the lowest level:</p>
+                <ul>
+                    <li><strong>Kernel Memory:</strong> Reserved for OS, drivers, and kernel data structures</li>
+                    <li><strong>User Memory:</strong> Application memory space</li>
+                    <li><strong>Page File:</strong> Virtual memory extension on disk</li>
+                    <li><strong>System Structures:</strong> Process table, VAD trees, handle tables</li>
+                </ul>
+
+                <h3>Volatility Framework</h3>
+                <p><strong>Volatility</strong> is the industry-leading framework for memory dump analysis. It provides plugins for extracting artifacts:</p>
+                <ul>
+                    <li><strong>Process Analysis:</strong> pslist, pstree, psscan (find hidden processes)</li>
+                    <li><strong>Network Artifacts:</strong> netscan, connections, sockets</li>
+                    <li><strong>File Handling:</strong> filescan, handles (open files and registry keys)</li>
+                    <li><strong>Rootkit Detection:</strong> rootkitscan, malfind (detect injected code)</li>
+                    <li><strong>Registry Analysis:</strong> hivelist, printkey (extract registry hives)</li>
+                    <li><strong>Malware Recovery:</strong> vaddump, memdump (dump suspicious regions)</li>
+                </ul>
+            </section>
+
+            <!-- ANALYSIS PHASES -->
+            <section class="section">
+                <h2>Memory Forensics Analysis Phases</h2>
+
+                <div class="phase-cards">
+                    <div class="phase-card">
+                        <div class="phase-number">1</div>
+                        <h4>Capture</h4>
+                        <p>Safely extract memory dump before power-down</p>
+                    </div>
+                    <div class="phase-card">
+                        <div class="phase-number">2</div>
+                        <h4>Identification</h4>
+                        <p>Determine OS, profile, and memory image type</p>
+                    </div>
+                    <div class="phase-card">
+                        <div class="phase-number">3</div>
+                        <h4>Analysis</h4>
+                        <p>Extract and examine memory artifacts</p>
+                    </div>
+                    <div class="phase-card">
+                        <div class="phase-number">4</div>
+                        <h4>Investigation</h4>
+                        <p>Correlate artifacts to identify malware/IOCs</p>
+                    </div>
+                    <div class="phase-card">
+                        <div class="phase-number">5</div>
+                        <h4>Reporting</h4>
+                        <p>Document findings and create timeline</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MEMORY ARTIFACTS -->
+            <section class="section">
+                <h2>Key Memory Artifacts</h2>
+
+                <table class="artifact-table">
+                    <thead>
+                        <tr>
+                            <th>Artifact Type</th>
+                            <th>Volatility Plugin</th>
+                            <th>Forensic Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Processes</strong></td>
+                            <td><span class="artifact-badge">pslist, pstree, psscan</span></td>
+                            <td>Identify running applications, find injected code, parent-child relationships</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Network Connections</strong></td>
+                            <td><span class="artifact-badge">netscan, connections</span></td>
+                            <td>Detect C2 communications, data exfiltration, network beacons</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Open Files</strong></td>
+                            <td><span class="artifact-badge">filescan, handles</span></td>
+                            <td>See what files were accessed, temporary files, handles to resources</td>
+                        </tr>
+                        <tr>
+                            <td><strong>DLLs and Modules</strong></td>
+                            <td><span class="artifact-badge">dlllist, ldrmodules</span></td>
+                            <td>Detect unhook attempts, anomalous library loading, code injection</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Injected Code</strong></td>
+                            <td><span class="artifact-badge">malfind, hollowfind</span></td>
+                            <td>Find shellcode, process hollowing, rootkits, hidden malware</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Rootkits</strong></td>
+                            <td><span class="artifact-badge">rootkitscan, driverscan</span></td>
+                            <td>Detect kernel-level rootkits, hidden processes, hooked functions</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Registry Hives</strong></td>
+                            <td><span class="artifact-badge">hivelist, printkey</span></td>
+                            <td>Extract USER, SAM, SYSTEM hives with current state</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Browser Artifacts</strong></td>
+                            <td><span class="artifact-badge">iehistory, firefoxcache</span></td>
+                            <td>Browser history, cookies, cached pages in memory</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- TOOLS & TECHNIQUES -->
+            <section class="section">
+                <h2>Memory Forensics Tools</h2>
+
+                <div class="tool-grid">
+                    <div class="tool-card">
+                        <div class="tool-icon">🔍</div>
+                        <h4>Volatility Framework</h4>
+                        <p>Industry-standard memory analysis platform with 200+ plugins</p>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-icon">📸</div>
+                        <h4>DumpIt</h4>
+                        <p>Quick memory capture tool for Windows systems</p>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-icon">💾</div>
+                        <h4>WinDbg</h4>
+                        <p>Windows debugger for low-level memory analysis</p>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-icon">🐧</div>
+                        <h4>LiME</h4>
+                        <p>Linux Memory Extractor for kernel-level capture</p>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-icon">🔐</div>
+                        <h4>Rekall</h4>
+                        <p>Advanced memory analysis framework (Volatility successor)</p>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-icon">🎯</div>
+                        <h4>AVML</h4>
+                        <p>Portable memory imaging across platforms</p>
+                    </div>
+                </div>
+
+                <h3>Volatility Basic Workflow</h3>
+                <div class="code-block">
+                    <span class="comment"># 1. Identify the image profile (OS/version)</span><br>
+                    volatility -f memory.dump imageinfo<br>
+                    <br>
+                    <span class="comment"># 2. List running processes</span><br>
+                    volatility -f memory.dump --profile=Win7SP1x64 pslist<br>
+                    <br>
+                    <span class="comment"># 3. Look for hidden processes (kernel-level hiding)</span><br>
+                    volatility -f memory.dump --profile=Win7SP1x64 psscan<br>
+                    <br>
+                    <span class="comment"># 4. Analyze network connections</span><br>
+                    volatility -f memory.dump --profile=Win7SP1x64 netscan<br>
+                    <br>
+                    <span class="comment"># 5. Find injected code and rootkits</span><br>
+                    volatility -f memory.dump --profile=Win7SP1x64 malfind<br>
+                    volatility -f memory.dump --profile=Win7SP1x64 rootkitscan<br>
+                    <br>
+                    <span class="comment"># 6. Extract files and registry hives</span><br>
+                    volatility -f memory.dump --profile=Win7SP1x64 filescan | grep -i .exe<br>
+                    volatility -f memory.dump --profile=Win7SP1x64 hivelist<br>
+                    <br>
+                    <span class="comment"># 7. Dump suspicious process memory</span><br>
+                    volatility -f memory.dump --profile=Win7SP1x64 memdump -p [PID] -D ./dump/
+                </div>
+
+                <h3>Capturing Memory Dumps</h3>
+                <div class="code-block">
+                    <span class="comment"># Windows: Using DumpIt (must run as Administrator)</span><br>
+                    dumpit.exe<br>
+                    <span class="comment"># Creates DumpIt.sys in current directory</span><br>
+                    <br>
+                    <span class="comment"># Linux: Using LiME</span><br>
+                    sudo insmod lime.ko "path=/home/output/memory.dump format=lime"<br>
+                    <br>
+                    <span class="comment"># Verify captured dump</span><br>
+                    file memory.dump<br>
+                    ls -lh memory.dump<br>
+                    md5sum memory.dump
+                </div>
+
+                <div class="info-box tip">
+                    <h4>💡 Pro Tips</h4>
+                    <ul style="margin-left: 1rem; margin-bottom: 0;">
+                        <li>Always identify the profile first—analysis depends on correct profile selection</li>
+                        <li>Use psscan in addition to pslist to find processes hidden by rootkits</li>
+                        <li>Cross-reference artifacts: if netscan shows suspicious IP, find corresponding process in pslist</li>
+                        <li>Dump suspicious process memory for deeper analysis with IDA Pro or Ghidra</li>
+                        <li>Extract volatility output to CSV for better correlation and timeline building</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- PRACTICAL EXERCISES -->
+            <section class="section">
+                <h2>Hands-On Exercises</h2>
+
+                <h3>Exercise 1: Memory Dump Capture</h3>
+                <p><strong>Objective:</strong> Safely capture memory from a running lab system.</p>
+                <ol>
+                    <li>Prepare isolated lab VM with known state</li>
+                    <li>Install memory capture tool (DumpIt for Windows or LiME for Linux)</li>
+                    <li>Execute capture:
+                        <ul>
+                            <li>Windows: Run DumpIt.exe as Administrator</li>
+                            <li>Linux: Load LiME kernel module with output path</li>
+                        </ul>
+                    </li>
+                    <li>Verify dump captured:
+                        <ul>
+                            <li>Check file size (should be close to system RAM)</li>
+                            <li>Verify dump integrity with hash</li>
+                            <li>Document capture time and system state</li>
+                        </ul>
+                    </li>
+                </ol>
+
+                <h3>Exercise 2: Image Profile Identification</h3>
+                <p><strong>Objective:</strong> Identify OS version and architecture of memory dump.</p>
+                <ol>
+                    <li>Run imageinfo plugin: <code>volatility -f dump.mem imageinfo</code></li>
+                    <li>Note suggested profiles (usually multiple options)</li>
+                    <li>Identify key information:
+                        <ul>
+                            <li>Windows version and service pack</li>
+                            <li>Architecture (32-bit or 64-bit)</li>
+                            <li>Suggested Volatility profile</li>
+                        </ul>
+                    </li>
+                    <li>Document selected profile for all subsequent analysis</li>
+                </ol>
+
+                <h3>Exercise 3: Process Analysis and Hidden Process Detection</h3>
+                <p><strong>Objective:</strong> Identify running processes including hidden ones.</p>
+                <ol>
+                    <li>List processes from PEB (visible to Windows):
+                        <ul>
+                            <li><code>volatility -f dump.mem --profile=Win7SP1x64 pslist</code></li>
+                            <li>Note parent-child relationships</li>
+                        </ul>
+                    </li>
+                    <li>Scan process objects (find hidden processes):
+                        <ul>
+                            <li><code>volatility -f dump.mem --profile=Win7SP1x64 psscan</code></li>
+                            <li>Compare with pslist output</li>
+                            <li>Identify processes in psscan but not in pslist (hidden)</li>
+                        </ul>
+                    </li>
+                    <li>Analyze suspicious processes:
+                        <ul>
+                            <li>Document command lines and working directories</li>
+                            <li>Note unusual parent-child relationships (explorer.exe spawning cmd.exe, etc.)</li>
+                        </ul>
+                    </li>
+                </ol>
+
+                <h3>Exercise 4: Network Forensics and IOC Detection</h3>
+                <p><strong>Objective:</strong> Extract network connections and identify C2 communication.</p>
+                <ol>
+                    <li>Extract all network connections:
+                        <ul>
+                            <li><code>volatility -f dump.mem --profile=Win7SP1x64 netscan</code></li>
+                        </ul>
+                    </li>
+                    <li>For each connection, identify:
+                        <ul>
+                            <li>Source and destination IP addresses</li>
+                            <li>Port numbers and protocols</li>
+                            <li>Associated process ID and name</li>
+                            <li>Connection state (ESTABLISHED, LISTENING, etc.)</li>
+                        </ul>
+                    </li>
+                    <li>Cross-reference with known malicious IPs/domains (threat intel)</li>
+                    <li>Correlate with process analysis to build attack narrative</li>
+                </ol>
+
+                <h3>Exercise 5: Malware Detection and Code Injection Analysis</h3>
+                <p><strong>Objective:</strong> Identify injected code and rootkits in memory.</p>
+                <ol>
+                    <li>Scan for injected code:
+                        <ul>
+                            <li><code>volatility -f dump.mem --profile=Win7SP1x64 malfind</code></li>
+                            <li>Look for executable pages in unusual locations</li>
+                            <li>Identify VAD regions with EXECUTE access</li>
+                        </ul>
+                    </li>
+                    <li>Detect rootkits:
+                        <ul>
+                            <li><code>volatility -f dump.mem --profile=Win7SP1x64 rootkitscan</code></li>
+                            <li>Check for hooked system calls and functions</li>
+                            <li>Look for hidden modules and drivers</li>
+                        </ul>
+                    </li>
+                    <li>Dump suspicious regions:
+                        <ul>
+                            <li><code>volatility -f dump.mem --profile=Win7SP1x64 memdump -p [PID] -D ./dumps/</code></li>
+                            <li>Analyze dumped regions with IDA Pro or Ghidra</li>
+                        </ul>
+                    </li>
+                </ol>
+            </section>
+
+            <!-- SUBMISSION CHECKLIST -->
+            <section class="section">
+                <h2>Submission Checklist</h2>
+                <div class="checklist">
+                    <h4>Complete the following before submitting:</h4>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check1">
+                        <label for="check1">Completed all 5 practical exercises</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check2">
+                        <label for="check2">Successfully captured memory dump from lab system</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check3">
+                        <label for="check3">Identified correct memory image profile</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check4">
+                        <label for="check4">Listed all processes and identified hidden ones</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check5">
+                        <label for="check5">Extracted network connections and documented findings</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check6">
+                        <label for="check6">Detected injected code and rootkits</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check7">
+                        <label for="check7">Created comprehensive memory forensics report</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check8">
+                        <label for="check8">Included artifact correlation and timeline analysis</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check9">
+                        <label for="check9">Followed all legal and ethical guidelines</label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- KEY TAKEAWAYS -->
+            <section class="section">
+                <h2>Key Takeaways</h2>
+                <div class="info-box objective">
+                    <h4>🎯 Remember These Points</h4>
+                    <ul style="margin-left: 1rem; margin-bottom: 0;">
+                        <li>Volatile memory provides critical evidence that disk analysis cannot reveal</li>
+                        <li>Memory captures must be done immediately—data is lost on power-down</li>
+                        <li>Correct profile identification is essential for accurate Volatility analysis</li>
+                        <li>psscan finds hidden processes; pslist only shows visible ones</li>
+                        <li>Network connections in memory reveal active C2 communication</li>
+                        <li>malfind and rootkitscan detect techniques invisible to file-based scanning</li>
+                        <li>Cross-referencing artifacts builds stronger forensic narratives</li>
+                        <li>Memory forensics is critical for detecting advanced persistent threats (APTs)</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- RESOURCES -->
+            <section class="section">
+                <h2>Additional Resources</h2>
+                <ul>
+                    <li><strong>Volatility Documentation:</strong> https://github.com/volatilityfoundation/volatility</li>
+                    <li><strong>Volatility Plugin Development:</strong> Writing custom plugins for specific threats</li>
+                    <li><strong>The Art of Memory Forensics:</strong> Industry reference textbook</li>
+                    <li><strong>NIST SP 800-72:</strong> Guidelines for Guidelines for Guidelines for Forensic Memory</li>
+                    <li><strong>Rekall Framework:</strong> Modern successor to Volatility</li>
+                    <li><strong>YARA Rules:</strong> Detect malware patterns in memory dumps</li>
+                </ul>
+            </section>
+
+            <!-- PROGRESS BAR -->
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <div class="progress-text">Activity 7 of 10 (70% complete)</div>
+            </div>
+
+            <!-- NAVIGATION -->
+            <div class="navigation">
+                <a href="activity06.html" class="nav-button">← Previous Activity</a>
+                <div class="nav-spacer"></div>
+                <a href="activity08.html" class="nav-button">Next Activity →</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>&copy; 2024 Central New Mexico Community College - Cybersecurity Program</p>
+        <p>Instructor: Frank | CISSP, SecAI Certified</p>
+        <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.7;">Activity 07: Memory Forensics Analysis</p>
+    </footer>
+
+    <script>
+        // Update progress bar based on scroll
+        window.addEventListener('scroll', () => {
+            const scrolled = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+            const progressFill = document.querySelector('.progress-fill');
+            progressFill.style.width = Math.min(scrolled, 100) + '%';
+        });
+
+        // Smooth scroll for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Add animation to info boxes on scroll
+        const infoBoxes = document.querySelectorAll('.info-box, .phase-cards, .tool-grid');
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        infoBoxes.forEach(box => {
+            box.style.opacity = '0';
+            box.style.transform = 'translateY(20px)';
+            box.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(box);
+        });
+
+        // Persist checklist state in localStorage
+        const checkboxes = document.querySelectorAll('.checklist-item input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+            // Load state from localStorage
+            const saved = localStorage.getItem('activity07-' + checkbox.id);
+            if (saved) {
+                checkbox.checked = JSON.parse(saved);
+            }
+
+            // Save state on change
+            checkbox.addEventListener('change', () => {
+                localStorage.setItem('activity07-' + checkbox.id, JSON.stringify(checkbox.checked));
+            });
+        });
+    </script>
+</body>
+</html>
