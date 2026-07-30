@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity 10: Security Hardening - CNM Cybersecurity</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --navy: #0F1419;
+            --cyan: #00D9FF;
+            --red: #DC3545;
+            --gray-light: #F0F2F5;
+            --gray-dark: #2D3139;
+            --black: #000000;
+            --white: #FFFFFF;
+            --success: #28A745;
+            --warning: #FFC107;
+            --border-radius: 8px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: var(--gray-light);
+            overflow-x: hidden;
+        }
+
+        /* ============ HEADER & NAV ============ */
+        header {
+            background: linear-gradient(135deg, var(--navy) 0%, #1a2333 100%);
+            color: var(--white);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 217, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo span {
+            color: var(--cyan);
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        nav a {
+            color: var(--white);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--cyan);
+            transition: width 0.3s ease;
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        .breadcrumb {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-left: auto;
+        }
+
+        /* ============ HERO SECTION ============ */
+        .hero {
+            background: linear-gradient(135deg, var(--navy) 0%, #1a2333 50%, #0d1117 100%);
+            color: var(--white);
+            padding: 4rem 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: -500px;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(40, 167, 69, 0.15) 0%, transparent 70%);
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(30px); }
+        }
+
+        .hero-content {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .activity-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: rgba(40, 167, 69, 0.2);
+            border: 1px solid var(--success);
+            border-radius: 20px;
+            color: var(--success);
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .hero h1 {
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            line-height: 1.2;
+        }
+
+        .hero h1 .highlight {
+            color: var(--success);
+            text-shadow: 0 0 20px rgba(40, 167, 69, 0.5);
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            max-width: 700px;
+        }
+
+        .activity-meta {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .meta-label {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .meta-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        /* ============ MAIN CONTENT ============ */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .content-wrapper {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 3rem;
+            margin: -2rem 2rem 3rem;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 2;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section h2 {
+            font-size: 1.8rem;
+            color: var(--navy);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid var(--success);
+            display: inline-block;
+        }
+
+        .section h3 {
+            font-size: 1.3rem;
+            color: var(--navy);
+            margin-top: 1.5rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .section p {
+            margin-bottom: 1rem;
+            line-height: 1.8;
+            color: #555;
+        }
+
+        .section ul, .section ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .section li {
+            margin-bottom: 0.8rem;
+            line-height: 1.7;
+            color: #555;
+        }
+
+        /* ============ INFO BOXES ============ */
+        .info-box {
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            margin: 1.5rem 0;
+            border-left: 4px solid;
+        }
+
+        .info-box.objective {
+            background: rgba(0, 217, 255, 0.08);
+            border-color: var(--cyan);
+        }
+
+        .info-box.objective h4 {
+            color: #0066cc;
+            margin-bottom: 0.8rem;
+        }
+
+        .info-box.warning {
+            background: rgba(220, 53, 69, 0.08);
+            border-color: var(--red);
+        }
+
+        .info-box.warning h4 {
+            color: var(--red);
+            margin-bottom: 0.8rem;
+        }
+
+        .info-box.tip {
+            background: rgba(40, 167, 69, 0.08);
+            border-color: var(--success);
+        }
+
+        .info-box.tip h4 {
+            color: var(--success);
+            margin-bottom: 0.8rem;
+        }
+
+        .info-box h4 {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .info-box p {
+            margin-bottom: 0.5rem;
+        }
+
+        .info-box p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* ============ HARDENING DOMAINS ============ */
+        .domain-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .domain-card {
+            background: linear-gradient(135deg, var(--navy), var(--gray-dark));
+            color: var(--white);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            border: 2px solid var(--success);
+            position: relative;
+        }
+
+        .domain-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .domain-card h4 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .domain-card p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin-bottom: 0;
+        }
+
+        /* ============ CONTROL TABLE ============ */
+        .control-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+        }
+
+        .control-table th {
+            background: var(--navy);
+            color: var(--white);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .control-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .control-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .control-table tr:nth-child(even) {
+            background: rgba(40, 167, 69, 0.03);
+        }
+
+        .control-badge {
+            display: inline-block;
+            padding: 0.3rem 0.6rem;
+            background: rgba(40, 167, 69, 0.2);
+            color: var(--success);
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* ============ TOOL CARDS ============ */
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .tool-card {
+            background: var(--white);
+            border: 2px solid #eee;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+
+        .tool-card:hover {
+            border-color: var(--success);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.15);
+        }
+
+        .tool-icon {
+            font-size: 2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .tool-card h4 {
+            color: var(--navy);
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .tool-card p {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0;
+        }
+
+        /* ============ CODE BLOCKS ============ */
+        .code-block {
+            background: var(--navy);
+            color: var(--cyan);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            border: 1px solid var(--gray-dark);
+        }
+
+        .code-block .comment {
+            color: #6A9955;
+        }
+
+        .code-block .keyword {
+            color: var(--cyan);
+        }
+
+        .code-block .output {
+            color: #CE9178;
+        }
+
+        /* ============ CHECKLIST ============ */
+        .checklist {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            border: 1px solid #eee;
+            margin: 1.5rem 0;
+        }
+
+        .checklist h4 {
+            color: var(--navy);
+            margin-bottom: 1rem;
+        }
+
+        .checklist-item {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0.8rem;
+            align-items: flex-start;
+        }
+
+        .checklist-item input[type="checkbox"] {
+            margin-top: 4px;
+            cursor: pointer;
+            accent-color: var(--success);
+            width: 18px;
+            height: 18px;
+        }
+
+        .checklist-item label {
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .checklist-item input[type="checkbox"]:checked + label {
+            text-decoration: line-through;
+            color: #999;
+        }
+
+        /* ============ NAVIGATION ============ */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 2px solid #eee;
+            gap: 1rem;
+        }
+
+        .nav-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 10px 20px;
+            text-decoration: none;
+            background: var(--navy);
+            color: var(--white);
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+
+        .nav-button:hover {
+            background: var(--success);
+            color: var(--white);
+        }
+
+        .nav-button.disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .nav-spacer {
+            flex: 1;
+        }
+
+        /* ============ PROGRESS BAR ============ */
+        .progress-container {
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success), var(--cyan));
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        .progress-text {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        .completion-message {
+            background: rgba(40, 167, 69, 0.1);
+            border: 2px solid var(--success);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+
+        .completion-message h3 {
+            color: var(--success);
+            margin-bottom: 0.5rem;
+        }
+
+        /* ============ FOOTER ============ */
+        footer {
+            background: var(--navy);
+            color: var(--white);
+            padding: 2rem;
+            text-align: center;
+            margin-top: 3rem;
+            border-top: 3px solid var(--success);
+        }
+
+        footer p {
+            opacity: 0.8;
+            margin-bottom: 0.5rem;
+        }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .content-wrapper {
+                padding: 2rem;
+                margin: -1.5rem 1rem 2rem;
+            }
+
+            nav ul {
+                gap: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .breadcrumb {
+                width: 100%;
+                margin-left: 0;
+                order: 3;
+            }
+
+            nav {
+                flex-wrap: wrap;
+            }
+
+            .activity-meta {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .domain-cards,
+            .tool-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .navigation {
+                flex-direction: column;
+            }
+
+            .control-table {
+                font-size: 0.85rem;
+            }
+
+            .control-table th,
+            .control-table td {
+                padding: 0.6rem;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header>
+        <nav>
+            <div class="logo">
+                🛡️ <span>CNM Cyber</span>Security
+            </div>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="index.html#courses">Courses</a></li>
+                <li><a href="index.html#activities">Activities</a></li>
+                <li><span class="breadcrumb">Activity 10: Security Hardening</span></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+        <div class="hero-content">
+            <span class="activity-badge">🔒 BEGINNER LEVEL</span>
+            <h1>Activity 10: <span class="highlight">Security Hardening</span></h1>
+            <p>Reduce attack surface by hardening systems and networks. Apply security baselines, disable unnecessary services, patch vulnerabilities, and implement defense-in-depth strategies.</p>
+            
+            <div class="activity-meta">
+                <div class="meta-item">
+                    <span class="meta-label">Difficulty</span>
+                    <span class="meta-value">Beginner</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Duration</span>
+                    <span class="meta-value">2-3 hours</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Tools Required</span>
+                    <span class="meta-value">Nessus, CIS Benchmarks, Ansible</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+        <div class="content-wrapper">
+            <!-- LEARNING OBJECTIVES -->
+            <section class="section">
+                <h2>Learning Objectives</h2>
+                <div class="info-box objective">
+                    <h4>📚 What You'll Learn</h4>
+                    <ul style="margin-left: 1rem; margin-bottom: 0;">
+                        <li>Understand attack surface reduction and defense-in-depth concepts</li>
+                        <li>Apply security baselines (CIS Benchmarks, DISA STIGs, NIST guidelines)</li>
+                        <li>Disable unnecessary services and protocols to minimize exposure</li>
+                        <li>Configure OS hardening (permissions, firewall, UAC, SELinux)</li>
+                        <li>Implement patch management and vulnerability remediation</li>
+                        <li>Harden network infrastructure (segmentation, ACLs, DNS filtering)</li>
+                        <li>Apply application hardening and secure configuration</li>
+                        <li>Use infrastructure-as-code for consistent hardening deployment</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- INTRODUCTION -->
+            <section class="section">
+                <h2>Introduction</h2>
+                <p><strong>Security hardening</strong> is the practice of reducing system vulnerability by eliminating unnecessary services, closing ports, applying security patches, and configuring secure defaults. Hardening is a proactive defense strategy—it makes systems harder to compromise by reducing the attack surface.</p>
+                
+                <p>Hardening follows the principle of <strong>defense-in-depth</strong>: multiple security layers ensure that if one control fails, others still provide protection.</p>
+
+                <h3>Why Hardening Matters</h3>
+                <ul>
+                    <li><strong>Reduces Attack Surface:</strong> Fewer services = fewer exploitable vulnerabilities</li>
+                    <li><strong>Slows Attackers:</strong> Hardened systems are more difficult and time-consuming to compromise</li>
+                    <li><strong>Limits Lateral Movement:</strong> Network segmentation prevents attackers from spreading</li>
+                    <li><strong>Enables Faster Detection:</strong> Unusual activity stands out on hardened baselines</li>
+                    <li><strong>Improves Compliance:</strong> Satisfies security standards and regulations (CIS, NIST, PCI-DSS)</li>
+                </ul>
+
+                <div class="info-box tip">
+                    <h4>💡 The 70/30 Rule</h4>
+                    <p>Security research shows that ~70% of breaches exploit known vulnerabilities with publicly available patches. Hardening (patching, disabling services, secure configs) prevents the majority of breaches. The remaining 30% require advanced detection and response capabilities.</p>
+                </div>
+            </section>
+
+            <!-- HARDENING DOMAINS -->
+            <section class="section">
+                <h2>Security Hardening Domains</h2>
+
+                <div class="domain-cards">
+                    <div class="domain-card">
+                        <div class="domain-icon">🖥️</div>
+                        <h4>Operating System</h4>
+                        <p>Disable services, harden kernel, configure permissions</p>
+                    </div>
+                    <div class="domain-card">
+                        <div class="domain-icon">🌐</div>
+                        <h4>Network</h4>
+                        <p>Segmentation, firewalls, disable protocols</p>
+                    </div>
+                    <div class="domain-card">
+                        <div class="domain-icon">📱</div>
+                        <h4>Application</h4>
+                        <p>Secure coding, input validation, logging</p>
+                    </div>
+                    <div class="domain-card">
+                        <div class="domain-icon">🔐</div>
+                        <h4>Authentication</h4>
+                        <p>Strong passwords, MFA, account lockout policies</p>
+                    </div>
+                    <div class="domain-card">
+                        <div class="domain-icon">🔑</div>
+                        <h4>Cryptography</h4>
+                        <p>Encryption at-rest and in-transit, key management</p>
+                    </div>
+                    <div class="domain-card">
+                        <div class="domain-icon">📋</div>
+                        <h4>Configuration</h4>
+                        <p>Secure defaults, remove backdoors, version control</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- OS HARDENING -->
+            <section class="section">
+                <h2>Operating System Hardening</h2>
+
+                <h3>Windows Hardening</h3>
+                <ul>
+                    <li><strong>Disable Unnecessary Services:</strong> Remove SMBv1, Telnet, SNMP (attack vectors)</li>
+                    <li><strong>Windows Defender:</strong> Enable real-time protection and cloud-based detection</li>
+                    <li><strong>Windows Firewall:</strong> Default-deny for inbound, enable outbound filtering</li>
+                    <li><strong>User Account Control (UAC):</strong> Require elevation for privileged operations</li>
+                    <li><strong>Security Baseline:</strong> Apply CIS Benchmarks or DISA STIGs via Group Policy</li>
+                    <li><strong>PowerShell Logging:</strong> Enable ScriptBlockLogging and Module Logging for visibility</li>
+                    <li><strong>Audit Policy:</strong> Enable advanced audit policies (Process Creation, Network Connection)</li>
+                    <li><strong>Disk Encryption:</strong> BitLocker for confidentiality of data at-rest</li>
+                </ul>
+
+                <div class="code-block">
+                    <span class="comment"># Disable SMBv1 (Windows)</span><br>
+                    Set-SmbServerConfiguration -EnableSMB1Protocol $false -Force<br>
+                    <br>
+                    <span class="comment"># Enable PowerShell script logging</span><br>
+                    New-ItemProperty -Path "HKLM:\Software\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging" -Name "EnableScriptBlockLogging" -Value 1<br>
+                    <br>
+                    <span class="comment"># Apply CIS Benchmark via Group Policy (domain)</span><br>
+                    gpupdate /force<br>
+                    <br>
+                    <span class="comment"># Enable Windows Defender real-time protection</span><br>
+                    Set-MpPreference -DisableRealtimeMonitoring $false
+                </div>
+
+                <h3>Linux Hardening</h3>
+                <ul>
+                    <li><strong>File Permissions:</strong> Principle of least privilege (644 for config, 755 for executables)</li>
+                    <li><strong>SELinux/AppArmor:</strong> Mandatory Access Control (MAC) to restrict process capabilities</li>
+                    <li><strong>SSH Hardening:</strong> Disable password auth, use key-based auth only, restrict root login</li>
+                    <li><strong>Firewall (UFW/iptables):</strong> Default-deny inbound, allow only necessary ports</li>
+                    <li><strong>Sudo Configuration:</strong> Restrict sudo access, require password, log all sudo usage</li>
+                    <li><strong>Kernel Parameters:</strong> Disable IP forwarding (sysctl.conf), enable ASLR, restrict kernel modules</li>
+                    <li><strong>Regular Patching:</strong> Keep kernel, libraries, and packages up-to-date</li>
+                    <li><strong>Audit Logging:</strong> Enable auditd for system call monitoring</li>
+                </ul>
+
+                <div class="code-block">
+                    <span class="comment"># SSH hardening (/etc/ssh/sshd_config)</span><br>
+                    PermitRootLogin no<br>
+                    PubkeyAuthentication yes<br>
+                    PasswordAuthentication no<br>
+                    X11Forwarding no<br>
+                    Port 2222  <span class="comment"># Non-standard port</span><br>
+                    <br>
+                    <span class="comment"># Apply firewall rules (UFW)</span><br>
+                    sudo ufw default deny incoming<br>
+                    sudo ufw default allow outgoing<br>
+                    sudo ufw allow 22/tcp<br>
+                    sudo ufw allow 80/tcp<br>
+                    sudo ufw allow 443/tcp<br>
+                    sudo ufw enable<br>
+                    <br>
+                    <span class="comment"># Kernel hardening (sysctl.conf)</span><br>
+                    net.ipv4.ip_forward = 0<br>
+                    kernel.yama.ptrace_scope = 2  <span class="comment"># Restrict ptrace</span><br>
+                    kernel.kptr_restrict = 2  <span class="comment"># Hide kernel pointers</span>
+                </div>
+            </section>
+
+            <!-- NETWORK HARDENING -->
+            <section class="section">
+                <h2>Network Hardening</h2>
+
+                <h3>Network Segmentation</h3>
+                <p>Divide network into security zones to limit lateral movement:</p>
+                <ul>
+                    <li><strong>DMZ:</strong> Public-facing servers (web, mail, DNS) isolated from internal network</li>
+                    <li><strong>Internal Network:</strong> User workstations and internal services</li>
+                    <li><strong>Admin Network:</strong> Privileged access workstations (PAW) for admin tasks</li>
+                    <li><strong>IoT/Guest Network:</strong> Untrusted devices isolated from critical infrastructure</li>
+                    <li><strong>Data Center:</strong> Database and file servers with restricted access</li>
+                </ul>
+
+                <h3>Firewall & Access Control</h3>
+                <ul>
+                    <li><strong>Default-Deny Posture:</strong> Deny all traffic by default, allow only necessary flows</li>
+                    <li><strong>Application Layer Filtering:</strong> Inspect traffic for malicious payloads</li>
+                    <li><strong>VPN Requirements:</strong> Require VPN for remote access (zero-trust networks)</li>
+                    <li><strong>Intrusion Prevention:</strong> Block known attack signatures and abnormal traffic</li>
+                </ul>
+
+                <h3>DNS & Threat Intelligence</h3>
+                <ul>
+                    <li><strong>DNS Filtering:</strong> Block known malicious domains and C2 infrastructure</li>
+                    <li><strong>DNSSEC:</strong> Prevent DNS spoofing attacks</li>
+                    <li><strong>Threat Intelligence Feeds:</strong> Update IDS/IPS with latest IOCs</li>
+                </ul>
+
+                <div class="code-block">
+                    <span class="comment"># Basic firewall rules (iptables)</span><br>
+                    sudo iptables -P INPUT DROP<br>
+                    sudo iptables -P FORWARD DROP<br>
+                    sudo iptables -P OUTPUT ACCEPT<br>
+                    <br>
+                    <span class="comment"># Allow SSH</span><br>
+                    sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT<br>
+                    <br>
+                    <span class="comment"># Allow established connections</span><br>
+                    sudo iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT<br>
+                    <br>
+                    <span class="comment"># Save rules (Ubuntu/Debian)</span><br>
+                    sudo ufw enable
+                </div>
+            </section>
+
+            <!-- SECURITY CONTROLS -->
+            <section class="section">
+                <h2>Essential Security Controls</h2>
+
+                <table class="control-table">
+                    <thead>
+                        <tr>
+                            <th>Control Category</th>
+                            <th>Implementation</th>
+                            <th>Security Baseline</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Patch Management</strong></td>
+                            <td>Automated patching, regular vulnerability scans</td>
+                            <td><span class="control-badge">Critical</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Access Control</strong></td>
+                            <td>Principle of least privilege, role-based access, MFA</td>
+                            <td><span class="control-badge">Critical</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Encryption</strong></td>
+                            <td>TLS 1.2+ for transit, AES-256 for storage</td>
+                            <td><span class="control-badge">Critical</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Logging & Monitoring</strong></td>
+                            <td>Centralized log aggregation, real-time alerting</td>
+                            <td><span class="control-badge">Critical</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Firewalls</strong></td>
+                            <td>Network segmentation, default-deny policies</td>
+                            <td><span class="control-badge">Critical</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Endpoint Protection</strong></td>
+                            <td>Anti-malware, host-based IDS, EDR</td>
+                            <td><span class="control-badge">Critical</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Vulnerability Management</strong></td>
+                            <td>Regular scanning, risk assessment, remediation tracking</td>
+                            <td><span class="control-badge">High</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Backup & Recovery</strong></td>
+                            <td>Automated backups, offsite storage, recovery testing</td>
+                            <td><span class="control-badge">High</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- HARDENING TOOLS -->
+            <section class="section">
+                <h2>Hardening Tools & Frameworks</h2>
+
+                <div class="tool-grid">
+                    <div class="tool-card">
+                        <div class="tool-icon">📋</div>
+                        <h4>CIS Benchmarks</h4>
+                        <p>Industry-standard hardening guidelines for OS/applications</p>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-icon">🔍</div>
+                        <h4>Nessus</h4>
+                        <p>Vulnerability scanning and policy compliance checking</p>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-icon">🤖</div>
+                        <h4>Ansible</h4>
+                        <p>Infrastructure-as-code for consistent hardening deployment</p>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-icon">📜</div>
+                        <h4>DISA STIGs</h4>
+                        <p>Security Technical Implementation Guides from DoD</p>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-icon">🛡️</div>
+                        <h4>OpenSCAP</h4>
+                        <p>Compliance scanning and remediation framework</p>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-icon">⚙️</div>
+                        <h4>Terraform</h4>
+                        <p>Infrastructure provisioning with secure defaults</p>
+                    </div>
+                </div>
+
+                <h3>Automated Hardening with Ansible</h3>
+                <p>Deploy security configurations at scale:</p>
+                <div class="code-block">
+                    <span class="comment"># Ansible playbook: hardening.yml</span><br>
+                    ---<br>
+                    - hosts: all<br>
+                    &nbsp;&nbsp;tasks:<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;- name: Disable SMBv1<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;win_powershell:<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;script: 'Set-SmbServerConfiguration -EnableSMB1Protocol $false -Force'<br>
+                    <br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;- name: Enable Windows Firewall<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;win_firewall:<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;state: enabled<br>
+                    <br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;- name: Apply CIS Benchmark<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;win_secpol:<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;section: 'Account Lockout Policy'<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;key: 'LockoutDuration'<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value: 30<br>
+                    <br>
+                    <span class="comment"># Run playbook: ansible-playbook hardening.yml -i inventory.ini</span>
+                </div>
+            </section>
+
+            <!-- PRACTICAL EXERCISES -->
+            <section class="section">
+                <h2>Hands-On Exercises</h2>
+
+                <h3>Exercise 1: OS Hardening Audit</h3>
+                <p><strong>Objective:</strong> Audit a system against security baselines.</p>
+                <ol>
+                    <li>Choose a baseline (CIS Benchmark, DISA STIG, or NIST)</li>
+                    <li>Audit current system configuration:
+                        <ul>
+                            <li>Running services and open ports</li>
+                            <li>User accounts and permissions</li>
+                            <li>Firewall and security policy settings</li>
+                            <li>Encryption and logging status</li>
+                        </ul>
+                    </li>
+                    <li>Identify gaps (non-compliant settings)</li>
+                    <li>Document findings in audit report</li>
+                    <li>Prioritize remediation by severity</li>
+                </ol>
+
+                <h3>Exercise 2: Windows Hardening Implementation</h3>
+                <p><strong>Objective:</strong> Apply security hardening to Windows system.</p>
+                <ol>
+                    <li>Disable unnecessary services:
+                        <ul>
+                            <li>SMBv1, Telnet, SNMP, unnecessary RPC services</li>
+                            <li>Remote Desktop (if not needed)</li>
+                        </ul>
+                    </li>
+                    <li>Configure Windows Defender and Firewall</li>
+                    <li>Enable PowerShell logging and audit policies</li>
+                    <li>Apply Group Policy security templates</li>
+                    <li>Enable BitLocker encryption</li>
+                    <li>Re-scan with Nessus to verify improvements</li>
+                </ol>
+
+                <h3>Exercise 3: Linux Hardening Implementation</h3>
+                <p><strong>Objective:</strong> Harden Linux server against common attacks.</p>
+                <ol>
+                    <li>Configure SSH hardening:
+                        <ul>
+                            <li>Disable password authentication</li>
+                            <li>Restrict root login</li>
+                            <li>Use non-standard port (e.g., 2222)</li>
+                        </ul>
+                    </li>
+                    <li>Configure firewall (UFW/iptables):
+                        <ul>
+                            <li>Default-deny inbound</li>
+                            <li>Allow only necessary ports</li>
+                        </ul>
+                    </li>
+                    <li>Harden kernel parameters (sysctl.conf)</li>
+                    <li>Enable SELinux or AppArmor</li>
+                    <li>Set correct file permissions (644/755 standard)</li>
+                    <li>Verify with automated scanning</li>
+                </ol>
+
+                <h3>Exercise 4: Network Segmentation Design</h3>
+                <p><strong>Objective:</strong> Design network security zones.</p>
+                <ol>
+                    <li>For a given organization (e.g., small business, hospital, university):
+                        <ul>
+                            <li>Identify critical assets (databases, file servers, HR systems)</li>
+                            <li>Design network zones (DMZ, internal, admin, guest, data center)</li>
+                        </ul>
+                    </li>
+                    <li>Create firewall rule matrix:
+                        <ul>
+                            <li>Source zone → Destination zone → Allowed protocols/ports</li>
+                            <li>Example: DMZ ↔ Internal: Only HTTP/HTTPS, port 443</li>
+                        </ul>
+                    </li>
+                    <li>Implement segmentation via VLANs or physical separation</li>
+                    <li>Document security zones and data flows</li>
+                </ol>
+
+                <h3>Exercise 5: Hardening Automation with Ansible</h3>
+                <p><strong>Objective:</strong> Create playbook for consistent hardening deployment.</p>
+                <ol>
+                    <li>Write Ansible playbook covering:
+                        <ul>
+                            <li>Patch management (yum/apt update)</li>
+                            <li>Disable unnecessary services</li>
+                            <li>Firewall configuration</li>
+                            <li>SSH hardening</li>
+                            <li>User account policies (password length, expiry)</li>
+                        </ul>
+                    </li>
+                    <li>Deploy to multiple systems in lab environment</li>
+                    <li>Verify compliance with automated scanning</li>
+                    <li>Version control playbook in Git</li>
+                </ol>
+            </section>
+
+            <!-- SUBMISSION CHECKLIST -->
+            <section class="section">
+                <h2>Submission Checklist</h2>
+                <div class="checklist">
+                    <h4>Complete the following before submitting:</h4>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check1">
+                        <label for="check1">Completed all 5 practical exercises</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check2">
+                        <label for="check2">Performed comprehensive hardening audit against baseline</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check3">
+                        <label for="check3">Implemented Windows hardening controls</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check4">
+                        <label for="check4">Implemented Linux hardening controls</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check5">
+                        <label for="check5">Designed network segmentation with firewall rules</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check6">
+                        <label for="check6">Created Ansible playbook for automated hardening</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check7">
+                        <label for="check7">Documented all hardening changes and rationale</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check8">
+                        <label for="check8">Verified improvements with vulnerability scanning</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check9">
+                        <label for="check9">Aligned implementation with security framework (CIS/DISA/NIST)</label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- KEY TAKEAWAYS -->
+            <section class="section">
+                <h2>Key Takeaways</h2>
+                <div class="info-box objective">
+                    <h4>🎯 Remember These Points</h4>
+                    <ul style="margin-left: 1rem; margin-bottom: 0;">
+                        <li>Hardening reduces attack surface—fewer services = fewer vulnerabilities</li>
+                        <li>Defense-in-depth means multiple layers (OS, network, app, crypto, monitoring)</li>
+                        <li>~70% of breaches exploit known vulnerabilities—patches and baselines matter most</li>
+                        <li>CIS Benchmarks, DISA STIGs, and NIST guidelines provide tested hardening standards</li>
+                        <li>Network segmentation limits lateral movement and contains breaches</li>
+                        <li>Default-deny firewall policies are more secure than default-allow</li>
+                        <li>Automation (Ansible, Terraform) enables consistent hardening at scale</li>
+                        <li>Hardening is ongoing—continuous scanning and remediation prevent regression</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- COURSE COMPLETION -->
+            <section class="section">
+                <div class="completion-message">
+                    <h3>🎉 Congratulations!</h3>
+                    <p>You've completed all 10 activities in the CNM Cybersecurity Lab Suite!</p>
+                    <p style="margin-top: 1rem; font-size: 0.95rem;">
+                        <strong>Your Journey:</strong> You've progressed from network reconnaissance and exploitation (Activities 01–05) through forensic investigation and malware analysis (Activities 06–08), incident response (Activity 09), and finally defensive hardening (Activity 10). You now possess a comprehensive understanding of both offensive security and defensive security operations.
+                    </p>
+                    <p style="margin-top: 1rem; font-size: 0.95rem;">
+                        <strong>Next Steps:</strong> Continue building expertise by pursuing advanced certifications (OSCP, CPTS, CRTO), contributing to open-source security projects, or exploring specialized tracks like AI red teaming, cloud security, or industrial control systems.
+                    </p>
+                </div>
+            </section>
+
+            <!-- RESOURCES -->
+            <section class="section">
+                <h2>Additional Resources</h2>
+                <ul>
+                    <li><strong>CIS Benchmarks:</strong> https://www.cisecurity.org/cis-benchmarks/ (Golden standard for hardening)</li>
+                    <li><strong>DISA Security Technical Implementation Guides:</strong> https://public.cyber.mil/stigs/</li>
+                    <li><strong>NIST Cybersecurity Framework:</strong> https://www.nist.gov/cyberframework</li>
+                    <li><strong>Center for Internet Security:</strong> https://www.cisecurity.org/</li>
+                    <li><strong>Ansible Documentation:</strong> https://docs.ansible.com/</li>
+                    <li><strong>Nessus Vulnerability Scanner:</strong> https://www.tenable.com/products/nessus</li>
+                    <li><strong>OpenSCAP:</strong> https://www.open-scap.org/</li>
+                </ul>
+            </section>
+
+            <!-- PROGRESS BAR -->
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <div class="progress-text">Activity 10 of 10 (100% complete) ✅</div>
+            </div>
+
+            <!-- NAVIGATION -->
+            <div class="navigation">
+                <a href="activity09.html" class="nav-button">← Previous Activity</a>
+                <div class="nav-spacer"></div>
+                <a href="index.html" class="nav-button">Return to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>&copy; 2024 Central New Mexico Community College - Cybersecurity Program</p>
+        <p>Instructor: Frank | CISSP, SecAI Certified</p>
+        <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.7;">Activity 10: Security Hardening — Course Completion</p>
+    </footer>
+
+    <script>
+        // Update progress bar based on scroll
+        window.addEventListener('scroll', () => {
+            const scrolled = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+            const progressFill = document.querySelector('.progress-fill');
+            progressFill.style.width = Math.min(scrolled, 100) + '%';
+        });
+
+        // Smooth scroll for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Add animation to info boxes on scroll
+        const infoBoxes = document.querySelectorAll('.info-box, .domain-cards, .tool-grid');
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        infoBoxes.forEach(box => {
+            box.style.opacity = '0';
+            box.style.transform = 'translateY(20px)';
+            box.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(box);
+        });
+
+        // Persist checklist state in localStorage
+        const checkboxes = document.querySelectorAll('.checklist-item input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+            // Load state from localStorage
+            const saved = localStorage.getItem('activity10-' + checkbox.id);
+            if (saved) {
+                checkbox.checked = JSON.parse(saved);
+            }
+
+            // Save state on change
+            checkbox.addEventListener('change', () => {
+                localStorage.setItem('activity10-' + checkbox.id, JSON.stringify(checkbox.checked));
+            });
+        });
+    </script>
+</body>
+</html>
