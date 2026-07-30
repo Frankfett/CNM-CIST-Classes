@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity 08: Malware Analysis Lab - CNM Cybersecurity</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --navy: #0F1419;
+            --cyan: #00D9FF;
+            --red: #DC3545;
+            --gray-light: #F0F2F5;
+            --gray-dark: #2D3139;
+            --black: #000000;
+            --white: #FFFFFF;
+            --success: #28A745;
+            --warning: #FFC107;
+            --purple: #6F42C1;
+            --border-radius: 8px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: var(--gray-light);
+            overflow-x: hidden;
+        }
+
+        /* ============ HEADER & NAV ============ */
+        header {
+            background: linear-gradient(135deg, var(--navy) 0%, #1a2333 100%);
+            color: var(--white);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 217, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo span {
+            color: var(--cyan);
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        nav a {
+            color: var(--white);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--cyan);
+            transition: width 0.3s ease;
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        .breadcrumb {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-left: auto;
+        }
+
+        /* ============ HERO SECTION ============ */
+        .hero {
+            background: linear-gradient(135deg, var(--navy) 0%, #1a2333 50%, #0d1117 100%);
+            color: var(--white);
+            padding: 4rem 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: -500px;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(111, 66, 193, 0.15) 0%, transparent 70%);
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(30px); }
+        }
+
+        .hero-content {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .activity-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: rgba(111, 66, 193, 0.2);
+            border: 1px solid var(--purple);
+            border-radius: 20px;
+            color: var(--purple);
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .hero h1 {
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            line-height: 1.2;
+        }
+
+        .hero h1 .highlight {
+            color: var(--purple);
+            text-shadow: 0 0 20px rgba(111, 66, 193, 0.5);
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            max-width: 700px;
+        }
+
+        .activity-meta {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .meta-label {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .meta-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        /* ============ MAIN CONTENT ============ */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .content-wrapper {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 3rem;
+            margin: -2rem 2rem 3rem;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 2;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section h2 {
+            font-size: 1.8rem;
+            color: var(--navy);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid var(--purple);
+            display: inline-block;
+        }
+
+        .section h3 {
+            font-size: 1.3rem;
+            color: var(--navy);
+            margin-top: 1.5rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .section p {
+            margin-bottom: 1rem;
+            line-height: 1.8;
+            color: #555;
+        }
+
+        .section ul, .section ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .section li {
+            margin-bottom: 0.8rem;
+            line-height: 1.7;
+            color: #555;
+        }
+
+        /* ============ INFO BOXES ============ */
+        .info-box {
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            margin: 1.5rem 0;
+            border-left: 4px solid;
+        }
+
+        .info-box.objective {
+            background: rgba(0, 217, 255, 0.08);
+            border-color: var(--cyan);
+        }
+
+        .info-box.objective h4 {
+            color: #0066cc;
+            margin-bottom: 0.8rem;
+        }
+
+        .info-box.warning {
+            background: rgba(220, 53, 69, 0.08);
+            border-color: var(--red);
+        }
+
+        .info-box.warning h4 {
+            color: var(--red);
+            margin-bottom: 0.8rem;
+        }
+
+        .info-box.tip {
+            background: rgba(40, 167, 69, 0.08);
+            border-color: var(--success);
+        }
+
+        .info-box.tip h4 {
+            color: var(--success);
+            margin-bottom: 0.8rem;
+        }
+
+        .info-box h4 {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .info-box p {
+            margin-bottom: 0.5rem;
+        }
+
+        .info-box p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* ============ ANALYSIS PHASES ============ */
+        .phase-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .phase-card {
+            background: linear-gradient(135deg, var(--navy), var(--gray-dark));
+            color: var(--white);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            border: 2px solid var(--purple);
+            position: relative;
+        }
+
+        .phase-number {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--purple);
+            margin-bottom: 0.5rem;
+        }
+
+        .phase-card h4 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .phase-card p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin-bottom: 0;
+        }
+
+        /* ============ ANALYSIS TYPE TABLE ============ */
+        .analysis-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+        }
+
+        .analysis-table th {
+            background: var(--navy);
+            color: var(--white);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .analysis-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .analysis-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .analysis-table tr:nth-child(even) {
+            background: rgba(111, 66, 193, 0.03);
+        }
+
+        .analysis-badge {
+            display: inline-block;
+            padding: 0.3rem 0.6rem;
+            background: rgba(111, 66, 193, 0.2);
+            color: var(--purple);
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* ============ TOOL CARDS ============ */
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .tool-card {
+            background: var(--white);
+            border: 2px solid #eee;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+
+        .tool-card:hover {
+            border-color: var(--purple);
+            box-shadow: 0 5px 15px rgba(111, 66, 193, 0.15);
+        }
+
+        .tool-icon {
+            font-size: 2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .tool-card h4 {
+            color: var(--navy);
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .tool-card p {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0;
+        }
+
+        /* ============ CODE BLOCKS ============ */
+        .code-block {
+            background: var(--navy);
+            color: var(--cyan);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            border: 1px solid var(--gray-dark);
+        }
+
+        .code-block .comment {
+            color: #6A9955;
+        }
+
+        .code-block .keyword {
+            color: var(--cyan);
+        }
+
+        .code-block .output {
+            color: #CE9178;
+        }
+
+        /* ============ IOC TABLE ============ */
+        .ioc-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: var(--white);
+            border: 2px solid var(--purple);
+        }
+
+        .ioc-table th {
+            background: var(--purple);
+            color: var(--white);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 700;
+        }
+
+        .ioc-table td {
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .ioc-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* ============ CHECKLIST ============ */
+        .checklist {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            border: 1px solid #eee;
+            margin: 1.5rem 0;
+        }
+
+        .checklist h4 {
+            color: var(--navy);
+            margin-bottom: 1rem;
+        }
+
+        .checklist-item {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0.8rem;
+            align-items: flex-start;
+        }
+
+        .checklist-item input[type="checkbox"] {
+            margin-top: 4px;
+            cursor: pointer;
+            accent-color: var(--purple);
+            width: 18px;
+            height: 18px;
+        }
+
+        .checklist-item label {
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .checklist-item input[type="checkbox"]:checked + label {
+            text-decoration: line-through;
+            color: #999;
+        }
+
+        /* ============ NAVIGATION ============ */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 2px solid #eee;
+            gap: 1rem;
+        }
+
+        .nav-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 10px 20px;
+            text-decoration: none;
+            background: var(--navy);
+            color: var(--white);
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+
+        .nav-button:hover {
+            background: var(--purple);
+            color: var(--white);
+        }
+
+        .nav-spacer {
+            flex: 1;
+        }
+
+        /* ============ PROGRESS BAR ============ */
+        .progress-container {
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--purple), var(--warning));
+            width: 80%;
+            border-radius: 10px;
+        }
+
+        .progress-text {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        /* ============ FOOTER ============ */
+        footer {
+            background: var(--navy);
+            color: var(--white);
+            padding: 2rem;
+            text-align: center;
+            margin-top: 3rem;
+            border-top: 3px solid var(--purple);
+        }
+
+        footer p {
+            opacity: 0.8;
+            margin-bottom: 0.5rem;
+        }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .content-wrapper {
+                padding: 2rem;
+                margin: -1.5rem 1rem 2rem;
+            }
+
+            nav ul {
+                gap: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .breadcrumb {
+                width: 100%;
+                margin-left: 0;
+                order: 3;
+            }
+
+            nav {
+                flex-wrap: wrap;
+            }
+
+            .activity-meta {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .phase-cards,
+            .tool-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .navigation {
+                flex-direction: column;
+            }
+
+            .analysis-table,
+            .ioc-table {
+                font-size: 0.85rem;
+            }
+
+            .analysis-table th,
+            .analysis-table td,
+            .ioc-table th,
+            .ioc-table td {
+                padding: 0.6rem;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header>
+        <nav>
+            <div class="logo">
+                🛡️ <span>CNM Cyber</span>Security
+            </div>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="index.html#courses">Courses</a></li>
+                <li><a href="index.html#activities">Activities</a></li>
+                <li><span class="breadcrumb">Activity 08: Malware Analysis</span></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+        <div class="hero-content">
+            <span class="activity-badge">🧬 ADVANCED LEVEL</span>
+            <h1>Activity 08: <span class="highlight">Malware Analysis Lab</span></h1>
+            <p>Reverse engineer malware samples using static and dynamic analysis techniques. Uncover malicious intent, identify persistence mechanisms, extract IOCs, and generate threat intelligence.</p>
+            
+            <div class="activity-meta">
+                <div class="meta-item">
+                    <span class="meta-label">Difficulty</span>
+                    <span class="meta-value">Advanced</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Duration</span>
+                    <span class="meta-value">5-7 hours</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Tools Required</span>
+                    <span class="meta-value">IDA Pro, Ghidra, VirusTotal, WinDbg</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+        <div class="content-wrapper">
+            <!-- LEARNING OBJECTIVES -->
+            <section class="section">
+                <h2>Learning Objectives</h2>
+                <div class="info-box objective">
+                    <h4>📚 What You'll Learn</h4>
+                    <ul style="margin-left: 1rem; margin-bottom: 0;">
+                        <li>Perform static analysis: file headers, imports, strings, entropy</li>
+                        <li>Execute dynamic analysis safely in isolated sandbox environments</li>
+                        <li>Use disassemblers (IDA Pro, Ghidra) to reverse engineer executables</li>
+                        <li>Identify malicious behavior and obfuscation techniques</li>
+                        <li>Extract IOCs (file hashes, domains, IPs, registry keys)</li>
+                        <li>Detect persistence mechanisms (registry, scheduled tasks, services)</li>
+                        <li>Analyze behavioral artifacts and network communication</li>
+                        <li>Write malware analysis reports for incident response teams</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- INTRODUCTION -->
+            <section class="section">
+                <h2>Introduction</h2>
+                <p><strong>Malware analysis</strong> is the process of understanding malicious software behavior, capabilities, and impact. Security teams use malware analysis to:</p>
+                
+                <ul>
+                    <li><strong>Threat Intelligence:</strong> Generate IOCs and publish threat reports</li>
+                    <li><strong>Incident Response:</strong> Understand what happened and how to contain it</li>
+                    <li><strong>Defense:</strong> Block malware signatures and behavioral patterns</li>
+                    <li><strong>Forensics:</strong> Reconstruct attack timeline and attacker intent</li>
+                    <li><strong>Attribution:</strong> Link malware to known threat actors</li>
+                </ul>
+
+                <p>Malware analysis uses two primary approaches:</p>
+                <ul>
+                    <li><strong>Static Analysis:</strong> Examine files without execution (safe, reversible)</li>
+                    <li><strong>Dynamic Analysis:</strong> Execute malware in sandbox and observe behavior (risky, requires isolation)</li>
+                </ul>
+
+                <div class="info-box warning">
+                    <h4>⚠️ Critical Safety Warning</h4>
+                    <p><strong>Never execute malware on production systems.</strong> All malware analysis MUST occur in isolated sandbox environments (VirtualBox, QEMU, cloud sandboxes). Malware can spread via network, USB, and storage. Single mistake can compromise your entire system and network.</p>
+                </div>
+            </section>
+
+            <!-- ANALYSIS TYPES -->
+            <section class="section">
+                <h2>Static vs. Dynamic Analysis</h2>
+
+                <table class="analysis-table">
+                    <thead>
+                        <tr>
+                            <th>Aspect</th>
+                            <th>Static Analysis</th>
+                            <th>Dynamic Analysis</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Approach</strong></td>
+                            <td>Examine files without execution</td>
+                            <td>Execute in sandbox, observe behavior</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Safety</strong></td>
+                            <td><span class="analysis-badge">Safe</span></td>
+                            <td><span class="analysis-badge">Requires Isolation</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Time</strong></td>
+                            <td>Quick (minutes to hours)</td>
+                            <td>Slower (hours to days)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Techniques</strong></td>
+                            <td>File headers, imports, strings, disassembly, entropy</td>
+                            <td>System calls, registry access, network traffic, behavioral logs</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Obfuscation Resilience</strong></td>
+                            <td>Difficult against sophisticated packing/encryption</td>
+                            <td>Reveals actual runtime behavior regardless of obfuscation</td>
+                        </tr>
+                        <tr>
+                            <td><strong>IOC Discovery</strong></td>
+                            <td>Limited to embedded strings and resources</td>
+                            <td>Comprehensive: domains, IPs, registry keys, file drops</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- ANALYSIS PHASES -->
+            <section class="section">
+                <h2>Malware Analysis Workflow</h2>
+
+                <div class="phase-cards">
+                    <div class="phase-card">
+                        <div class="phase-number">1</div>
+                        <h4>Preparation</h4>
+                        <p>Setup isolated sandbox, documentation, tools</p>
+                    </div>
+                    <div class="phase-card">
+                        <div class="phase-number">2</div>
+                        <h4>Static Analysis</h4>
+                        <p>File metadata, imports, strings, entropy, disassembly</p>
+                    </div>
+                    <div class="phase-card">
+                        <div class="phase-number">3</div>
+                        <h4>Dynamic Analysis</h4>
+                        <p>Sandbox execution, behavioral monitoring, network capture</p>
+                    </div>
+                    <div class="phase-card">
+                        <div class="phase-number">4</div>
+                        <h4>IOC Extraction</h4>
+                        <p>Collect hashes, domains, IPs, registry, file paths</p>
+                    </div>
+                    <div class="phase-card">
+                        <div class="phase-number">5</div>
+                        <h4>Reporting</h4>
+                        <p>Document findings, create MITRE ATT&CK mapping, threat intelligence</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- STATIC ANALYSIS TECHNIQUES -->
+            <section class="section">
+                <h2>Static Analysis Techniques</h2>
+
+                <h3>1. File Metadata & Header Analysis</h3>
+                <p>Examine PE headers and file properties for clues about compilation, dependencies, and suspicious indicators:</p>
+                <ul>
+                    <li><strong>Timestamps:</strong> Compilation time (reveals when malware was built)</li>
+                    <li><strong>Subsystem:</strong> Console vs. GUI (behavioral hints)</li>
+                    <li><strong>Sections:</strong> Suspicious names (.text, .data vs. .packed, .upack, .rsrc)</li>
+                    <li><strong>EntryPoint:</strong> Where execution starts (unusual values suggest packers)</li>
+                    <li><strong>Import Address Table (IAT):</strong> What Windows APIs are imported (CreateProcess, RegSetValue, etc.)</li>
+                </ul>
+
+                <div class="code-block">
+                    <span class="comment"># Examine file with exiftool</span><br>
+                    exiftool malware.exe<br>
+                    <br>
+                    <span class="comment"># PE header analysis with pefile (Python)</span><br>
+                    import pefile<br>
+                    pe = pefile.PE('malware.exe')<br>
+                    print(pe.FILE_HEADER.TimeDateStamp)<br>
+                    print([imp.dll for imp in pe.DIRECTORY_ENTRY_IMPORT])<br>
+                    <br>
+                    <span class="comment"># Quick strings extraction</span><br>
+                    strings malware.exe | grep -E '(http|registry|\.exe)'
+                </div>
+
+                <h3>2. String Analysis</h3>
+                <p>Extract readable strings to identify:</p>
+                <ul>
+                    <li>URLs and domains for C2 communication</li>
+                    <li>Registry paths for persistence</li>
+                    <li>File paths and system calls</li>
+                    <li>Debugging symbols or developer hints</li>
+                    <li>Packed/encrypted payload signatures</li>
+                </ul>
+
+                <h3>3. Entropy Analysis</h3>
+                <p>Measure randomness in binary sections to detect encryption/compression:</p>
+                <ul>
+                    <li><strong>Low entropy (0-3):</strong> Normal code or data</li>
+                    <li><strong>High entropy (6-8):</strong> Encrypted, compressed, or packed payload</li>
+                    <li>Sections with high entropy suggest obfuscation attempts</li>
+                </ul>
+
+                <h3>4. Import Table Analysis (IAT)</h3>
+                <p>Examine Windows API imports to predict functionality:</p>
+                <ul>
+                    <li><strong>CreateProcessA/W:</strong> Process injection or spawning</li>
+                    <li><strong>RegOpenKey/RegSetValue:</strong> Registry modification (persistence)</li>
+                    <li><strong>InternetOpenUrlA/W:</strong> Network communication</li>
+                    <li><strong>GetModuleHandle/GetProcAddress:</strong> Runtime API loading (evasion)</li>
+                    <li><strong>WriteFile/CreateFileA:</strong> File system access</li>
+                </ul>
+
+                <h3>5. Disassembly & Reverse Engineering</h3>
+                <p>Use disassemblers to understand code logic:</p>
+                <ul>
+                    <li><strong>IDA Pro:</strong> Industry standard, powerful analysis, expensive</li>
+                    <li><strong>Ghidra:</strong> NSA-released, free, excellent decompiler</li>
+                    <li><strong>Radare2:</strong> Open-source, CLI-driven, scriptable</li>
+                </ul>
+
+                <div class="code-block">
+                    <span class="comment"># Launch Ghidra for reverse engineering</span><br>
+                    ghidra_headless . -import malware.exe -postScript AnalysisScript.py<br>
+                    <br>
+                    <span class="comment"># Calculate entropy (Python)</span><br>
+                    import math<br>
+                    from collections import Counter<br>
+                    def entropy(data):<br>
+                    &nbsp;&nbsp;counts = Counter(data)<br>
+                    &nbsp;&nbsp;prob = [c/len(data) for c in counts.values()]<br>
+                    &nbsp;&nbsp;return -sum(p * math.log2(p) for p in prob)<br>
+                    <br>
+                    with open('malware.exe', 'rb') as f:<br>
+                    &nbsp;&nbsp;print(entropy(f.read()))
+                </div>
+            </section>
+
+            <!-- DYNAMIC ANALYSIS -->
+            <section class="section">
+                <h2>Dynamic Analysis & Sandboxing</h2>
+
+                <h3>Sandbox Environments</h3>
+                <p><strong>Critical Rule:</strong> NEVER run malware on production systems. Use isolated environments:</p>
+
+                <div class="tool-grid">
+                    <div class="tool-card">
+                        <div class="tool-icon">💻</div>
+                        <h4>VirtualBox Snapshot</h4>
+                        <p>Local VM with clean snapshot, no network</p>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-icon">🔒</div>
+                        <h4>Cuckoo Sandbox</h4>
+                        <p>Automated malware analysis platform</p>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-icon">☁️</div>
+                        <h4>ANY.RUN</h4>
+                        <p>Interactive cloud sandbox with screenshots</p>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-icon">🌐</div>
+                        <h4>VirusTotal</h4>
+                        <p>Free cloud sandboxing, threat intel aggregation</p>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-icon">📊</div>
+                        <h4>Hybrid-Analysis</h4>
+                        <p>Falcon sandbox, detailed behavioral reports</p>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-icon">📡</div>
+                        <h4>Joe Sandbox</h4>
+                        <p>Enterprise-grade analysis, deep packet inspection</p>
+                    </div>
+                </div>
+
+                <h3>Behavioral Monitoring</h3>
+                <p>During dynamic analysis, monitor:</p>
+                <ul>
+                    <li><strong>File System:</strong> Created, modified, or deleted files (Procmon)</li>
+                    <li><strong>Registry:</strong> Registry key modifications (Procmon)</li>
+                    <li><strong>Network:</strong> DNS queries, HTTP requests, connections (Wireshark, Burp)</li>
+                    <li><strong>Process Behavior:</strong> Spawned processes, injected DLLs (Process Hacker)</li>
+                    <li><strong>Memory:</strong> Suspicious allocations and modifications (WinDbg)</li>
+                </ul>
+
+                <h3>Dynamic Analysis Tools</h3>
+                <ul>
+                    <li><strong>Procmon (Process Monitor):</strong> Real-time file system and registry monitoring</li>
+                    <li><strong>Wireshark:</strong> Network traffic capture and analysis</li>
+                    <li><strong>WinDbg:</strong> Kernel debugger for live analysis</li>
+                    <li><strong>Process Hacker:</strong> Advanced process and thread viewer</li>
+                    <li><strong>Regshot:</strong> Registry snapshot comparison (before/after)</li>
+                </ul>
+
+                <div class="code-block">
+                    <span class="comment"># Capture network traffic (Linux)</span><br>
+                    tcpdump -i eth0 -w malware_traffic.pcap<br>
+                    wireshark malware_traffic.pcap<br>
+                    <br>
+                    <span class="comment"># Monitor system calls (Linux)</span><br>
+                    strace -e trace=open,read,write,execve -o trace.log ./malware<br>
+                    <br>
+                    <span class="comment"># Monitor with Procmon (Windows, requires admin)</span><br>
+                    procmon.exe /beginfiltering /noconnect
+                </div>
+
+                <div class="info-box tip">
+                    <h4>💡 Dynamic Analysis Best Practices</h4>
+                    <ul style="margin-left: 1rem; margin-bottom: 0;">
+                        <li>Isolate sandbox from network (air-gap or firewall rules)</li>
+                        <li>Start packet capture BEFORE execution</li>
+                        <li>Take snapshot of clean system state before running malware</li>
+                        <li>Use fake DNS responses to avoid real C2 callback</li>
+                        <li>Allow malware to run for 5-10 minutes to observe full behavior</li>
+                        <li>Revert to snapshot after analysis (never "clean up" live)</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- TOOLS & TECHNIQUES -->
+            <section class="section">
+                <h2>Malware Analysis Tools</h2>
+
+                <div class="tool-grid">
+                    <div class="tool-card">
+                        <div class="tool-icon">🔍</div>
+                        <h4>IDA Pro</h4>
+                        <p>Industry-standard disassembler and debugger</p>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-icon">⚙️</div>
+                        <h4>Ghidra</h4>
+                        <p>Free NSA-released reverse engineering framework</p>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-icon">🐍</div>
+                        <h4>Radare2</h4>
+                        <p>Portable reverse engineering framework</p>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-icon">🛡️</div>
+                        <h4>Cuckoo Sandbox</h4>
+                        <p>Automated malware behavioral analysis</p>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-icon">📊</div>
+                        <h4>VirusTotal</h4>
+                        <p>Multi-scanner analysis and threat intel</p>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-icon">🔗</div>
+                        <h4>YARA Rules</h4>
+                        <p>Pattern-based malware detection</p>
+                    </div>
+                </div>
+
+                <h3>Common Malware Indicators (IOCs)</h3>
+                <table class="ioc-table">
+                    <thead>
+                        <tr>
+                            <th>IOC Type</th>
+                            <th>Example</th>
+                            <th>Use Case</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>File Hash</strong></td>
+                            <td>MD5/SHA-1/SHA-256</td>
+                            <td>Identify exact file samples, blocking</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Domain</strong></td>
+                            <td>malicious.com, c2.attacker.ru</td>
+                            <td>Block C2 communication via DNS/firewall</td>
+                        </tr>
+                        <tr>
+                            <td><strong>IP Address</strong></td>
+                            <td>192.168.1.100, 203.0.113.42</td>
+                            <td>Block network-level C2 callbacks</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Registry Key</strong></td>
+                            <td>HKLM\Software\Microsoft\Windows\Run</td>
+                            <td>Detect persistence mechanisms</td>
+                        </tr>
+                        <tr>
+                            <td><strong>File Path</strong></td>
+                            <td>C:\Users\%USERNAME%\AppData\malware.exe</td>
+                            <td>Identify where malware installs itself</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Mutex</strong></td>
+                            <td>Global\MalwareMutex_12345</td>
+                            <td>Detect running malware instances</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Service Name</strong></td>
+                            <td>WindowsUpdateService</td>
+                            <td>Masqueraded persistence services</td>
+                        </tr>
+                        <tr>
+                            <td><strong>User-Agent</strong></td>
+                            <td>Mozilla/5.0 (Custom C2 Framework)</td>
+                            <td>Block C2 HTTP communication</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- PRACTICAL EXERCISES -->
+            <section class="section">
+                <h2>Hands-On Exercises</h2>
+
+                <h3>Exercise 1: Setup Malware Analysis Sandbox</h3>
+                <p><strong>Objective:</strong> Create isolated, reproducible malware analysis environment.</p>
+                <ol>
+                    <li>Create clean Windows 7/10 VM with VirtualBox:
+                        <ul>
+                            <li>2GB+ RAM, 20GB disk</li>
+                            <li>Disable automatic updates</li>
+                            <li>Disable Windows Defender/UAC</li>
+                        </ul>
+                    </li>
+                    <li>Install analysis tools:
+                        <ul>
+                            <li>Process Monitor (Procmon)</li>
+                            <li>Wireshark</li>
+                            <li>Process Hacker</li>
+                            <li>Regshot</li>
+                            <li>IDA Pro Free or Ghidra</li>
+                        </ul>
+                    </li>
+                    <li>Configure network isolation:
+                        <ul>
+                            <li>NAT adapter only (no host network access)</li>
+                            <li>Block outbound traffic in firewall</li>
+                            <li>Or air-gap VM completely (no network adapter)</li>
+                        </ul>
+                    </li>
+                    <li>Create snapshot: Right-click VM → Snapshots → Take Snapshot (name: "Clean State")</li>
+                </ol>
+
+                <h3>Exercise 2: Static Analysis of Sample Malware</h3>
+                <p><strong>Objective:</strong> Perform deep static analysis without execution.</p>
+                <ol>
+                    <li>Obtain malware sample (from HackTheBox, Cuckoo samples, or VirusTotal)</li>
+                    <li>Calculate file hashes:
+                        <ul>
+                            <li><code>md5sum malware.exe</code></li>
+                            <li><code>sha256sum malware.exe</code></li>
+                        </ul>
+                    </li>
+                    <li>Extract strings: <code>strings malware.exe | sort | uniq > strings.txt</code></li>
+                    <li>Analyze PE headers with Ghidra:
+                        <ul>
+                            <li>Open in Ghidra</li>
+                            <li>Review imports (API functions)</li>
+                            <li>Check sections and entropy</li>
+                        </ul>
+                    </li>
+                    <li>Look for indicators:
+                        <ul>
+                            <li>Suspicious imports (CreateProcess, RegSetValue)</li>
+                            <li>Embedded URLs or domains</li>
+                            <li>File paths or registry keys</li>
+                            <li>Encryption/compression (high entropy sections)</li>
+                        </ul>
+                    </li>
+                    <li>Document findings in analysis report</li>
+                </ol>
+
+                <h3>Exercise 3: Disassembly & Reverse Engineering</h3>
+                <p><strong>Objective:</strong> Understand malware code logic via disassembly.</p>
+                <ol>
+                    <li>Open malware sample in Ghidra or IDA Pro</li>
+                    <li>Navigate to entry point and main function</li>
+                    <li>Trace suspicious function calls:
+                        <ul>
+                            <li>CreateProcessA → process injection</li>
+                            <li>RegOpenKeyExW → registry modification</li>
+                            <li>InternetOpenUrlA → C2 communication</li>
+                        </ul>
+                    </li>
+                    <li>Analyze control flow:
+                        <ul>
+                            <li>Conditional jumps (if-else logic)</li>
+                            <li>Loops (repeated malicious actions)</li>
+                            <li>Function calls (dependencies)</li>
+                        </ul>
+                    </li>
+                    <li>Add comments and labels for clarity</li>
+                    <li>Export function list and call graph</li>
+                </ol>
+
+                <h3>Exercise 4: Dynamic Analysis in Sandbox</h3>
+                <p><strong>Objective:</strong> Execute malware safely and observe runtime behavior.</p>
+                <ol>
+                    <li>Restore sandbox VM to clean snapshot</li>
+                    <li>Start monitoring tools:
+                        <ul>
+                            <li>Open Procmon (System Internals)</li>
+                            <li>Start Wireshark packet capture</li>
+                            <li>Open Process Hacker</li>
+                        </ul>
+                    </li>
+                    <li>Copy malware sample into sandbox via shared folder</li>
+                    <li>Execute malware and observe:
+                        <ul>
+                            <li>New processes spawned</li>
+                            <li>Files created/modified</li>
+                            <li>Registry modifications</li>
+                            <li>Network connections attempted</li>
+                        </ul>
+                    </li>
+                    <li>Let it run for 5-10 minutes to capture full behavior</li>
+                    <li>Export logs and PCAP for analysis</li>
+                    <li>Revert to clean snapshot (DO NOT shut down normally)</li>
+                </ol>
+
+                <h3>Exercise 5: IOC Extraction & Threat Report</h3>
+                <p><strong>Objective:</strong> Extract actionable intelligence from analysis.</p>
+                <ol>
+                    <li>Compile IOCs from static and dynamic analysis:
+                        <ul>
+                            <li>File hash (MD5, SHA-1, SHA-256)</li>
+                            <li>Domains/URLs (from strings and network capture)</li>
+                            <li>IP addresses (C2 servers)</li>
+                            <li>Registry keys modified</li>
+                            <li>File paths created</li>
+                            <li>Mutexes</li>
+                        </ul>
+                    </li>
+                    <li>Map malware behavior to MITRE ATT&CK framework:
+                        <ul>
+                            <li>Initial Access</li>
+                            <li>Persistence (registry, scheduled tasks)</li>
+                            <li>Defense Evasion</li>
+                            <li>Command & Control</li>
+                            <li>Exfiltration</li>
+                        </ul>
+                    </li>
+                    <li>Create comprehensive report including:
+                        <ul>
+                            <li>Executive summary</li>
+                            <li>Technical analysis (static & dynamic)</li>
+                            <li>IOCs and detection signatures</li>
+                            <li>MITRE ATT&CK mapping</li>
+                            <li>Remediation recommendations</li>
+                        </ul>
+                    </li>
+                </ol>
+            </section>
+
+            <!-- SUBMISSION CHECKLIST -->
+            <section class="section">
+                <h2>Submission Checklist</h2>
+                <div class="checklist">
+                    <h4>Complete the following before submitting:</h4>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check1">
+                        <label for="check1">Completed all 5 practical exercises</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check2">
+                        <label for="check2">Setup isolated malware analysis sandbox</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check3">
+                        <label for="check3">Performed static analysis on malware sample</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check4">
+                        <label for="check4">Performed disassembly and reverse engineering</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check5">
+                        <label for="check5">Executed malware in sandbox and captured behavioral data</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check6">
+                        <label for="check6">Extracted and documented all IOCs</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check7">
+                        <label for="check7">Mapped malware to MITRE ATT&CK framework</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check8">
+                        <label for="check8">Created comprehensive malware analysis report</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check9">
+                        <label for="check9">Followed sandbox isolation and safety protocols</label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- KEY TAKEAWAYS -->
+            <section class="section">
+                <h2>Key Takeaways</h2>
+                <div class="info-box objective">
+                    <h4>🎯 Remember These Points</h4>
+                    <ul style="margin-left: 1rem; margin-bottom: 0;">
+                        <li>Static analysis is safe and quick; dynamic analysis provides complete behavior picture</li>
+                        <li>NEVER run malware on production systems—always use isolated sandbox with no network access</li>
+                        <li>File hashes, domains, and registry keys are critical IOCs for blocking and detection</li>
+                        <li>MITRE ATT&CK mapping helps correlate malware behavior to known threat techniques</li>
+                        <li>Disassembly with Ghidra/IDA reveals attacker intent and hidden capabilities</li>
+                        <li>Behavioral artifacts (network traffic, file creation) are often more useful than code analysis</li>
+                        <li>Entropy analysis detects packing and encryption (signs of obfuscation)</li>
+                        <li>Good malware analysis reports enable better defense and incident response</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- RESOURCES -->
+            <section class="section">
+                <h2>Additional Resources</h2>
+                <ul>
+                    <li><strong>Ghidra:</strong> https://ghidra-sre.org/</li>
+                    <li><strong>VirusTotal:</strong> https://www.virustotal.com/</li>
+                    <li><strong>ANY.RUN:</strong> https://any.run/ (Interactive cloud sandbox)</li>
+                    <li><strong>Hybrid Analysis:</strong> https://www.hybrid-analysis.com/</li>
+                    <li><strong>Cuckoo Sandbox:</strong> https://cuckoosandbox.org/</li>
+                    <li><strong>MITRE ATT&CK:</strong> https://attack.mitre.org/</li>
+                    <li><strong>Malware Traffic Analysis:</strong> https://malware-traffic-analysis.net/</li>
+                    <li><strong>The Practical Malware Analysis Book:</strong> Industry reference</li>
+                </ul>
+            </section>
+
+            <!-- PROGRESS BAR -->
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <div class="progress-text">Activity 8 of 10 (80% complete)</div>
+            </div>
+
+            <!-- NAVIGATION -->
+            <div class="navigation">
+                <a href="activity07.html" class="nav-button">← Previous Activity</a>
+                <div class="nav-spacer"></div>
+                <a href="activity09.html" class="nav-button">Next Activity →</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>&copy; 2024 Central New Mexico Community College - Cybersecurity Program</p>
+        <p>Instructor: Frank | CISSP, SecAI Certified</p>
+        <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.7;">Activity 08: Malware Analysis Lab</p>
+    </footer>
+
+    <script>
+        // Update progress bar based on scroll
+        window.addEventListener('scroll', () => {
+            const scrolled = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+            const progressFill = document.querySelector('.progress-fill');
+            progressFill.style.width = Math.min(scrolled, 100) + '%';
+        });
+
+        // Smooth scroll for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Add animation to info boxes on scroll
+        const infoBoxes = document.querySelectorAll('.info-box, .phase-cards, .tool-grid');
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        infoBoxes.forEach(box => {
+            box.style.opacity = '0';
+            box.style.transform = 'translateY(20px)';
+            box.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(box);
+        });
+
+        // Persist checklist state in localStorage
+        const checkboxes = document.querySelectorAll('.checklist-item input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+            // Load state from localStorage
+            const saved = localStorage.getItem('activity08-' + checkbox.id);
+            if (saved) {
+                checkbox.checked = JSON.parse(saved);
+            }
+
+            // Save state on change
+            checkbox.addEventListener('change', () => {
+                localStorage.setItem('activity08-' + checkbox.id, JSON.stringify(checkbox.checked));
+            });
+        });
+    </script>
+</body>
+</html>
